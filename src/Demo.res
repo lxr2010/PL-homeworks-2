@@ -84,21 +84,6 @@ module Lambda = {
 
 }
 
-let input = {
-  open Lambda
-  Fun("x",Var("x"))
-  // App(Fun("x",App(Var("x"),Var("x"))),Fun("y",App(Var("y"),Var("y"))))
-  // App(Fun("x",Var("y")),App(Fun("z",App(Var("z"),Var("z"))),Fun("w",Var("w"))))
-}
-Js.log(Lambda.toString(input))
-
-let output = {
-  open Lambda
-  eval(input)
-}
-
-Js.log(Lambda.toString(output))
-
 let omega = {
   open Lambda
   let smallOmega = Fun("x",App(Var("x"),Var("x")))
@@ -106,7 +91,6 @@ let omega = {
 }
 
 Js.log(Lambda.toString(omega))
-
 
 let ycomb = {
   open Lambda
@@ -130,32 +114,12 @@ let one = {
   Fun("f",Fun("x",App(Var("f"),Var("x"))))
 }
 
-let toChurchNum = (n :int) => {
-  let rec helper = (n : int, churchNum: Lambda.t) : Lambda.t => 
-    if n < 0 {assert false}
-    else {
-      switch n {
-        | 0 => churchNum
-        | _ => helper(n-1, App(succ,churchNum))
-      }
-    }
-  helper(n,zero)
-}
-
-let numbers = {
-  list{
-    toChurchNum(0),
-    toChurchNum(1),
-    toChurchNum(2),
-    toChurchNum(3),
-    toChurchNum(4),
-    toChurchNum(5)
-  }
-}
-
-List.iter((x)=>(Js.log(Lambda.toString(Lambda.eval(x)))), numbers)
-
 let mul = {
+  open Lambda
+  Fun("n",Fun("m",Fun("f",App(Var("n"),App(Var("m"),Var("f"))))))
+}
+
+let exp = {
   open Lambda
   Fun("n",Fun("m",App(Var("m"),Var("n"))))
 }
@@ -222,17 +186,60 @@ let pred = {
         zero))))
 }
 
-List.iter((x)=>(Js.log(Lambda.toString(Lambda.eval(App(pred,x))))), numbers)
 
 let mulR = {
   open Lambda
   let f = {
     Fun("f",Fun("n",Fun("m",App(App(App(if_then_else,App(iszero,Var("n"))),zero),App(App(add,Var("m")),App(App(Var("f"),App(pred,Var("n"))),Var("m")))))))
   }
-  App(Fun("Y",App(Var("Y"),f)),ycomb)
+  App(ycomb,f)
+}
+
+let toChurchNum = (n :int) => {
+  let rec helper = (n : int, churchNum: Lambda.t) : Lambda.t => 
+    if n < 0 {assert false}
+    else {
+      switch n {
+        | 0 => churchNum
+        | _ => helper(n-1, App(succ,churchNum))
+      }
+    }
+  helper(n,zero)
+}
+
+let numbers = {
+  list{
+    toChurchNum(0),
+    toChurchNum(1),
+    toChurchNum(2),
+    toChurchNum(3),
+    toChurchNum(4),
+    toChurchNum(5)
+  }
+}
+
+let churchNumToInt = (t : Lambda.t) :int => {
+  open Lambda
+  let f = Var("f")
+  let x = Var("x")
+  let va = eval(App(App(t,f),x))
+  let rec decomposeChurch = (va' :t, f' :t, x' : t) => {
+    switch va' {
+    | Var(_) if va' == x' => 0
+    | App(g, y) if g == f' => decomposeChurch(y, f', x') + 1
+    | _ => assert false 
+    }
+  }
+  decomposeChurch(va,f,x)
 }
 
 let mul2by2 = {
   open Lambda
   App(App(mulR,toChurchNum(2)),toChurchNum(2))
 }
+
+List.iter((x)=>(Js.log(Lambda.toString(Lambda.eval(x)))), numbers)
+
+List.iter((x)=>(Js.log(Lambda.toString(Lambda.eval(App(pred,x))))), numbers)
+
+Js.log(churchNumToInt(App(pred,toChurchNum(15))))

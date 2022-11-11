@@ -3,6 +3,7 @@
 
 var List = require("rescript/lib/js/list.js");
 var $$String = require("rescript/lib/js/string.js");
+var Caml_obj = require("rescript/lib/js/caml_obj.js");
 var Belt_List = require("rescript/lib/js/belt_List.js");
 
 function toString(t) {
@@ -188,21 +189,6 @@ var Lambda = {
   $$eval: $$eval
 };
 
-var input = {
-  TAG: /* Fun */2,
-  _0: "x",
-  _1: {
-    TAG: /* Var */0,
-    _0: "x"
-  }
-};
-
-console.log(toString(input));
-
-var output = $$eval(input);
-
-console.log(toString(output));
-
 var smallOmega = {
   TAG: /* Fun */2,
   _0: "x",
@@ -331,64 +317,6 @@ var zero = {
     }
   }
 };
-
-function toChurchNum(n) {
-  var _n = n;
-  var _churchNum = zero;
-  while(true) {
-    var churchNum = _churchNum;
-    var n$1 = _n;
-    if (n$1 < 0) {
-      throw {
-            RE_EXN_ID: "Assert_failure",
-            _1: [
-              "Demo.res",
-              135,
-              14
-            ],
-            Error: new Error()
-          };
-    }
-    if (n$1 === 0) {
-      return churchNum;
-    }
-    _churchNum = {
-      TAG: /* App */1,
-      _0: succ,
-      _1: churchNum
-    };
-    _n = n$1 - 1 | 0;
-    continue ;
-  };
-}
-
-var numbers_0 = toChurchNum(0);
-
-var numbers_1 = {
-  hd: toChurchNum(1),
-  tl: {
-    hd: toChurchNum(2),
-    tl: {
-      hd: toChurchNum(3),
-      tl: {
-        hd: toChurchNum(4),
-        tl: {
-          hd: toChurchNum(5),
-          tl: /* [] */0
-        }
-      }
-    }
-  }
-};
-
-var numbers = {
-  hd: numbers_0,
-  tl: numbers_1
-};
-
-List.iter((function (x) {
-        console.log(toString($$eval(x)));
-      }), numbers);
 
 var if_then_else = {
   TAG: /* Fun */2,
@@ -641,14 +569,6 @@ var pred = {
   _1: pred_1
 };
 
-List.iter((function (x) {
-        console.log(toString($$eval({
-                      TAG: /* App */1,
-                      _0: pred,
-                      _1: x
-                    })));
-      }), numbers);
-
 var f_1 = {
   TAG: /* Fun */2,
   _0: "n",
@@ -716,24 +636,112 @@ var f = {
   _1: f_1
 };
 
-var mulR_0 = {
-  TAG: /* Fun */2,
-  _0: "Y",
-  _1: {
-    TAG: /* App */1,
-    _0: {
-      TAG: /* Var */0,
-      _0: "Y"
-    },
-    _1: f
+var mulR = {
+  TAG: /* App */1,
+  _0: ycomb,
+  _1: f
+};
+
+function toChurchNum(n) {
+  var _n = n;
+  var _churchNum = zero;
+  while(true) {
+    var churchNum = _churchNum;
+    var n$1 = _n;
+    if (n$1 < 0) {
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Demo.res",
+              200,
+              14
+            ],
+            Error: new Error()
+          };
+    }
+    if (n$1 === 0) {
+      return churchNum;
+    }
+    _churchNum = {
+      TAG: /* App */1,
+      _0: succ,
+      _1: churchNum
+    };
+    _n = n$1 - 1 | 0;
+    continue ;
+  };
+}
+
+var numbers_0 = toChurchNum(0);
+
+var numbers_1 = {
+  hd: toChurchNum(1),
+  tl: {
+    hd: toChurchNum(2),
+    tl: {
+      hd: toChurchNum(3),
+      tl: {
+        hd: toChurchNum(4),
+        tl: {
+          hd: toChurchNum(5),
+          tl: /* [] */0
+        }
+      }
+    }
   }
 };
 
-var mulR = {
-  TAG: /* App */1,
-  _0: mulR_0,
-  _1: ycomb
+var numbers = {
+  hd: numbers_0,
+  tl: numbers_1
 };
+
+function churchNumToInt(t) {
+  var f = {
+    TAG: /* Var */0,
+    _0: "f"
+  };
+  var x = {
+    TAG: /* Var */0,
+    _0: "x"
+  };
+  var va = $$eval({
+        TAG: /* App */1,
+        _0: {
+          TAG: /* App */1,
+          _0: t,
+          _1: f
+        },
+        _1: x
+      });
+  var decomposeChurch = function (va$p, f$p, x$p) {
+    switch (va$p.TAG | 0) {
+      case /* Var */0 :
+          if (Caml_obj.equal(va$p, x$p)) {
+            return 0;
+          }
+          break;
+      case /* App */1 :
+          if (Caml_obj.equal(va$p._0, f$p)) {
+            return decomposeChurch(va$p._1, f$p, x$p) + 1 | 0;
+          }
+          break;
+      case /* Fun */2 :
+          break;
+      
+    }
+    throw {
+          RE_EXN_ID: "Assert_failure",
+          _1: [
+            "Demo.res",
+            230,
+            11
+          ],
+          Error: new Error()
+        };
+  };
+  return decomposeChurch(va, f, x);
+}
 
 var mul2by2_0 = {
   TAG: /* App */1,
@@ -748,6 +756,24 @@ var mul2by2 = {
   _0: mul2by2_0,
   _1: mul2by2_1
 };
+
+List.iter((function (x) {
+        console.log(toString($$eval(x)));
+      }), numbers);
+
+List.iter((function (x) {
+        console.log(toString($$eval({
+                      TAG: /* App */1,
+                      _0: pred,
+                      _1: x
+                    })));
+      }), numbers);
+
+console.log(churchNumToInt({
+          TAG: /* App */1,
+          _0: pred,
+          _1: toChurchNum(15)
+        }));
 
 var one = {
   TAG: /* Fun */2,
@@ -776,6 +802,37 @@ var mul = {
     TAG: /* Fun */2,
     _0: "m",
     _1: {
+      TAG: /* Fun */2,
+      _0: "f",
+      _1: {
+        TAG: /* App */1,
+        _0: {
+          TAG: /* Var */0,
+          _0: "n"
+        },
+        _1: {
+          TAG: /* App */1,
+          _0: {
+            TAG: /* Var */0,
+            _0: "m"
+          },
+          _1: {
+            TAG: /* Var */0,
+            _0: "f"
+          }
+        }
+      }
+    }
+  }
+};
+
+var exp = {
+  TAG: /* Fun */2,
+  _0: "n",
+  _1: {
+    TAG: /* Fun */2,
+    _0: "m",
+    _1: {
       TAG: /* App */1,
       _0: {
         TAG: /* Var */0,
@@ -790,16 +847,13 @@ var mul = {
 };
 
 exports.Lambda = Lambda;
-exports.input = input;
-exports.output = output;
 exports.omega = omega;
 exports.ycomb = ycomb;
 exports.succ = succ;
 exports.zero = zero;
 exports.one = one;
-exports.toChurchNum = toChurchNum;
-exports.numbers = numbers;
 exports.mul = mul;
+exports.exp = exp;
 exports.if_then_else = if_then_else;
 exports.trueC = trueC;
 exports.falseC = falseC;
@@ -810,5 +864,8 @@ exports.fst = fst;
 exports.snd = snd;
 exports.pred = pred;
 exports.mulR = mulR;
+exports.toChurchNum = toChurchNum;
+exports.numbers = numbers;
+exports.churchNumToInt = churchNumToInt;
 exports.mul2by2 = mul2by2;
 /*  Not a pure module */
